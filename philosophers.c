@@ -1,7 +1,17 @@
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   philosophers.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hfafouri <hfafouri@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/09/05 15:00:17 by hfafouri          #+#    #+#             */
+/*   Updated: 2024/09/05 15:01:39 by hfafouri         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+
+#include "philosophers.h"
 
 int j = 0;
 
@@ -26,6 +36,8 @@ int main(int ac, char **av)
 {
     int nb = 0;
     int i = 0;
+    if (ac <= 1)
+        return(write(2,"ARG ERROR\n", 11));
     nb = atoi(av[1]);
     pthread_mutex_init(&mutex, NULL);
     pthread_t t1[nb];
