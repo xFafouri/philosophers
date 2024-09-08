@@ -21,6 +21,7 @@
 # include <sys/wait.h>
 # include <unistd.h>
 # include <semaphore.h>
+# include <sys/time.h>
 
 
 typedef struct s_philo
@@ -31,7 +32,6 @@ typedef struct s_philo
 	int					time_sleep;
 	pthread_t		thread;
 	int				id;
-	int				eating;
 	int				meals_eaten;
 	size_t			last_meal;
 	size_t			time_to_sleep;
