@@ -36,6 +36,13 @@ int	ft_atoi(const char *str)
 	return (r * s);
 }
 
+unsigned long get_time()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+}
+
 void thread_status(t_philo *philo, const char *message)
 {
     pthread_mutex_lock(&philo->write_lock);
@@ -43,10 +50,10 @@ void thread_status(t_philo *philo, const char *message)
     pthread_mutex_unlock(&philo->write_lock);
 }
 
-void *routine(void *arg) 
+void *routine(void *arg)
 {
     t_philo *philo = (t_philo *)arg;
-    while (1) 
+    while (1)
     {
         thread_status(philo, "is thinking");
         pthread_mutex_lock(philo->r_fork);
@@ -63,40 +70,41 @@ void *routine(void *arg)
 
         pthread_mutex_unlock(philo->l_fork);
         pthread_mutex_unlock(philo->r_fork);
-        thread_status(philo, "has dropped both forks");
+        thread_status(philo, "sala lah ykhlf");
         thread_status(philo, "is sleeping");
         usleep(philo->time_sleep * 1000);
     }
     return NULL;
 }
 
-void init_var(int ac, char **av, t_philo **philos)
+void init_var(int ac, char **av, t_philo *philos, pthread_mutex_t *forks)
 {
     int i = 0;
-    if (ac < 5) 
+    int num_philos = atoi(av[1]);
+
+    while (i < num_philos)
     {
-        write(2, "ARG ERROR\n", 11);
-        exit(1);
-    }
-     while (i < ft_atoi(av[1])) 
-    {
-        philos[i]->id = i;
-        philos[i]->nb_philo = ft_atoi(av[1]);
-        philos[i]->time_death = ft_atoi(av[2]);
-        philos[i]->time_eat = ft_atoi(av[3]);
-        philos[i]->time_sleep = ft_atoi(av[4]);
-        philos[i]->meals_eaten = 0;
-        philos[i]->last_meal = get_time();
-        philos[i]->dead = malloc(sizeof(int));
-        *philos[i]->dead = 0;
-        pthread_mutex_init(&philos[i]->write_lock, NULL);
-        pthread_mutex_init(&philos[i]->dead_lock, NULL);
-        pthread_mutex_init(&philos[i]->meal_lock, NULL);
+        philos[i].id = i;
+        philos[i].nb_philo = num_philos;
+        philos[i].time_death = atoi(av[2]);
+        philos[i].time_eat = atoi(av[3]);
+        philos[i].time_sleep = atoi(av[4]);
+        philos[i].meals_eaten = 0;
+        philos[i].last_meal = get_time();
+        philos[i].dead = malloc(sizeof(int));
+        *philos[i].dead = 0;
+
+        philos[i].r_fork = &forks[i];
+        philos[i].l_fork = &forks[(i + num_philos - 1) % num_philos];
+        pthread_mutex_init(&philos[i].write_lock, NULL);
+        pthread_mutex_init(&philos[i].dead_lock, NULL);
+        pthread_mutex_init(&philos[i].meal_lock, NULL);
         i++;
     }
 }
 
-void    ft_create_join_threads(t_philo *philos, char **av)
+
+void ft_create_join_threads(t_philo *philos, char **av)
 {
     int i = 0;
     while (i < ft_atoi(av[1]))
@@ -105,7 +113,7 @@ void    ft_create_join_threads(t_philo *philos, char **av)
         i++;
     }
     i = 0;
-    while(i < ft_atoi(av[1])) 
+    while (i < ft_atoi(av[1]))
     {
         pthread_join(philos[i].thread, NULL);
         i++;
@@ -115,19 +123,22 @@ void    ft_create_join_threads(t_philo *philos, char **av)
 void *supervisor(void *arg)
 {
     t_philo *philos = (t_philo *)arg;
+    int i = 0;
     while (1)
     {
-        while(i < philos->nb_philo)
+        while (i < philos->nb_philo)
         {
-            if (philos[i].eating == 0 && (get_time() - philos[i].last_meal >= philos[i].time_to_die)) 
+            if (philos[i].eating == 0 && (get_time() - philos[i].last_meal >= philos[i].time_death))
             {
                 pthread_mutex_lock(&philos[i].dead_lock);
                 *philos[i].dead = 1;
                 pthread_mutex_unlock(&philos[i].dead_lock);
-                status(&philos[i], "is dead");
+                thread_status(&philos[i], "is dead");
+                return NULL;
             }
+            i++;
         }
-        usleep(500);
+        usleep(750);
     }
     return NULL;
 }
@@ -136,34 +147,37 @@ void *monitor(void *arg)
 {
     t_philo *philos = (t_philo *)arg;
     int all_done = 0;
+    int i = 0;
     while (!all_done)
     {
         all_done = 1;
-        while(i < philos->nb_philo) 
+        while (i < philos->nb_philo)
         {
-            if (philos[i].meals_eaten < philos[i].num_times_to_eat) 
+            if (philos[i].meals_eaten < philos[i].num_times_to_eat)
             {
                 all_done = 0;
                 break;
             }
             i++;
         }
-        if (all_done) 
+        if (all_done)
         {
             thread_status(philos, "all philosophers have eaten enough");
         }
-        sleep(1);
+        usleep(750);
     }
     return NULL;
 }
 
-int main(int ac, char **av) 
+int main(int ac, char **av)
 {
     t_philo *philos = malloc(sizeof(t_philo) * (ft_atoi(av[1]) + 1));
+    pthread_mutex_t *forks = malloc(sizeof(pthread_mutex_t) * atoi(av[1]));
 
-    init_var(ac, av, philos);
+    init_var(ac, av, philos, forks); 
+
     pthread_t monitor_thread;
-    pthread_t   supervisor_thread;
+    pthread_t supervisor_thread;
     pthread_create(&supervisor_thread, NULL, supervisor, (void *)philos);
     pthread_create(&monitor_thread, NULL, monitor, (void *)philos);
 
@@ -171,8 +185,15 @@ int main(int ac, char **av)
     pthread_join(supervisor_thread, NULL);
     pthread_join(monitor_thread, NULL);
 
+    int i = 0;
+
+    while (i < atoi(av[1]))
+    {
+        pthread_mutex_init(&forks[i], NULL);
+        i++;
+    }
     i = 0;
-    while (i < ft_atoi(av[1])) 
+    while (i < ft_atoi(av[1]))
     {
         pthread_mutex_destroy(&philos[i].write_lock);
         pthread_mutex_destroy(&philos[i].dead_lock);
