@@ -13,6 +13,7 @@
 
 #include "philosophers.h"
 
+
 int	ft_atoi(const char *str)
 {
 	int	r;
@@ -54,25 +55,42 @@ void *routine(void *arg)
 {
     t_philo *philo = (t_philo *)arg;
     while (1)
-    {
+    {        
+        pthread_mutex_lock(&philo->dead_lock);
+        if (*philo->dead)
+        {
+            pthread_mutex_unlock(&philo->dead_lock);
+            break;
+        }
+        pthread_mutex_unlock(&philo->dead_lock);
         thread_status(philo, "is thinking");
         pthread_mutex_lock(philo->r_fork);
-        thread_status(philo, "has taken the right fork");
+        thread_status(philo, "khda limniya");
         pthread_mutex_lock(philo->l_fork);
-        thread_status(philo, "has taken the left fork");
+        thread_status(philo, "khda lisriya");
+        thread_status(philo, "has taken a fork");
+
+        pthread_mutex_lock(&philo->meal_lock);
+        // pthread_mutex_lock(&philo->meal_lock);
+        philo->eating = 1;
+        philo->last_meal = get_time();
+        pthread_mutex_unlock(&philo->meal_lock);
 
         thread_status(philo, "is eating");
-        philo->last_meal = get_time();
-        usleep(philo->time_eat * 1000);
+        usleep(philo->time_eat); 
+        // philo->meals_eaten++;
         pthread_mutex_lock(&philo->meal_lock);
         philo->meals_eaten++;
+        philo->eating = 0;
         pthread_mutex_unlock(&philo->meal_lock);
 
         pthread_mutex_unlock(philo->l_fork);
         pthread_mutex_unlock(philo->r_fork);
-        thread_status(philo, "sala lah ykhlf");
+
         thread_status(philo, "is sleeping");
-        usleep(philo->time_sleep * 1000);
+        usleep(philo->time_sleep);
+        if (philo->meals_eaten >= philo->num_times_to_eat)
+            break;
     }
     return NULL;
 }
@@ -86,16 +104,15 @@ void init_var(int ac, char **av, t_philo *philos, pthread_mutex_t *forks)
     {
         philos[i].id = i;
         philos[i].nb_philo = num_philos;
-        philos[i].time_death = atoi(av[2]);
+        philos[i].time_death =  atoi(av[2]);
         philos[i].time_eat = atoi(av[3]);
         philos[i].time_sleep = atoi(av[4]);
         philos[i].meals_eaten = 0;
         philos[i].last_meal = get_time();
         philos[i].dead = malloc(sizeof(int));
         *philos[i].dead = 0;
-
         philos[i].r_fork = &forks[i];
-        philos[i].l_fork = &forks[(i + num_philos - 1) % num_philos];
+        philos[i].l_fork = &forks[(i - 1+ num_philos) % num_philos];
         pthread_mutex_init(&philos[i].write_lock, NULL);
         pthread_mutex_init(&philos[i].dead_lock, NULL);
         pthread_mutex_init(&philos[i].meal_lock, NULL);
@@ -126,8 +143,10 @@ void *supervisor(void *arg)
     int i = 0;
     while (1)
     {
+        i = 0;
         while (i < philos->nb_philo)
         {
+            // mutex lock for eating
             if (philos[i].eating == 0 && (get_time() - philos[i].last_meal >= philos[i].time_death))
             {
                 pthread_mutex_lock(&philos[i].dead_lock);
@@ -151,6 +170,7 @@ void *monitor(void *arg)
     while (!all_done)
     {
         all_done = 1;
+        i = 0;
         while (i < philos->nb_philo)
         {
             if (philos[i].meals_eaten < philos[i].num_times_to_eat)
@@ -160,11 +180,6 @@ void *monitor(void *arg)
             }
             i++;
         }
-        if (all_done)
-        {
-            thread_status(philos, "all philosophers have eaten enough");
-        }
-        usleep(750);
     }
     return NULL;
 }
