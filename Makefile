@@ -1,14 +1,16 @@
 NAME = philosophers
-CC =	cc 
-CFLAGS = -fsanitize=address -g3 # -Wall -Wextra -Werror 
+CC = cc 
+CFLAGS = -fsanitize=thread -g3  -Wall -Wextra -Werror 
 
 SOURCE = philosophers.c
+#SOURCE = philosophers1.c
+
 OBJ = $(SOURCE:.c=.o)
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(NAME) -lpthread
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 
 %.o:%.c
 	$(CC) $(CFLAGS) -c $< -o $@ 
