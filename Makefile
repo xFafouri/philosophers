@@ -2,6 +2,7 @@ NAME = philosophers
 CC = cc 
 CFLAGS = -fsanitize=thread -g3  -Wall -Wextra -Werror 
 
+
 SOURCE = philosophers.c
 #SOURCE = philosophers1.c
 

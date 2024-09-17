@@ -6,7 +6,7 @@
 /*   By: hfafouri <hfafouri@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/05 15:00:17 by hfafouri          #+#    #+#             */
-/*   Updated: 2024/09/17 05:09:35 by hfafouri         ###   ########.fr       */
+/*   Updated: 2024/09/17 23:45:18 by hfafouri         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,13 +97,14 @@ void	*routine(void *arg)
 
     philo = (t_philo *)arg;
     if (philo->id % 2 != 0) 
-        usleep(100);
+        usleep(philo->time_eat / 2);
     while (1)
     {
 		// if (philo->id % 2 == 1)
 		// 	usleep(500);
         if (thread_status(philo, "is thinking"))
             break;
+		
         if (philo->id % 2 == 0)
         {
             if (check_forks(philo, philo->first_fork, philo->second_fork))
@@ -125,7 +126,6 @@ void	*routine(void *arg)
             break;
         }
         ft_usleep(philo->time_eat);
-
         if (philo->id % 2 == 0)
         {
             pthread_mutex_unlock(philo->second_fork);
@@ -151,8 +151,6 @@ void	*routine(void *arg)
     return (NULL);
 }
 
-
-// hanging ./philosophers 4 310 200 200
 
 void	init_var(int ac, char **av, t_philo *philos, pthread_mutex_t *forks,
 		t_shared *shared)
@@ -180,8 +178,12 @@ void	init_var(int ac, char **av, t_philo *philos, pthread_mutex_t *forks,
 		philos[i].no_time_eat = (ac == 5);
 		philos[i].start_time = start_time;
 		philos[i].shared = shared;
-		
-		if (i % 2 == 0)
+		if (i == philos[i].nb_philo)
+		{
+			philos[i].first_fork = &forks[(i + 1) % num_philos];
+			philos[i].second_fork = &forks[i];
+		}
+		else if (i % 2 == 0)
 		{
 			philos[i].first_fork = &forks[i];
 			philos[i].second_fork = &forks[(i + 1) % num_philos];
@@ -192,26 +194,10 @@ void	init_var(int ac, char **av, t_philo *philos, pthread_mutex_t *forks,
 			philos[i].second_fork = &forks[i];
 		}
 		pthread_mutex_init(&philos[i].meal_lock, NULL);
+		// printf("id = %d | time_death = %lu | time_eat = %lu | time_sleep = %lu |\n\n", philos[i].id, philos[i].time_death, philos[i].time_eat, philos[i].time_sleep);
 		i++;
 	}
 }
-
-// int all_ate(t_philo *philos)
-// {
-//     int i = 0;
-//     while (i < philos->nb_philo)
-//     {
-//         pthread_mutex_lock(&philos[i].meal_lock);
-//         if (philos[i].meals_eaten < philos[i].num_times_to_eat)
-//         {
-//             pthread_mutex_unlock(&philos[i].meal_lock);
-//             return (0);
-//         }
-//         pthread_mutex_unlock(&philos[i].meal_lock);
-// 		i++;
-//     }
-//     return (1);
-// }
 
 void	*supervisor(void *arg)
 {
@@ -221,7 +207,6 @@ void	*supervisor(void *arg)
 	unsigned long	current_time;
 
 	philos = (t_philo *)arg;
-	usleep(400);
 	while (1)
 	{
 		all_ate = 1;
