@@ -6,7 +6,7 @@
 /*   By: hfafouri <hfafouri@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/05 15:00:17 by hfafouri          #+#    #+#             */
-/*   Updated: 2024/09/18 05:12:18 by hfafouri         ###   ########.fr       */
+/*   Updated: 2024/09/19 06:57:06 by hfafouri         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ int	main(int ac, char **av)
 		write(2, "Error Args\n", 12);
 		exit(0);
 	}
-	// check_param(ac, av);
 	if (ft_atoi(av[1]) == 0 || ft_atoi(av[5]) == 0)
 		return (0);
 	num_philos = ft_atoi(av[1]);

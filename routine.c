@@ -6,7 +6,7 @@
 /*   By: hfafouri <hfafouri@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 03:51:44 by hfafouri          #+#    #+#             */
-/*   Updated: 2024/09/18 03:56:40 by hfafouri         ###   ########.fr       */
+/*   Updated: 2024/09/19 06:57:19 by hfafouri         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,19 @@ int	ft_eat(t_philo *philo)
 	return (0);
 }
 
+int	one_philo(t_philo *philo)
+{
+	if (philo->nb_philo == 1)
+	{
+		pthread_mutex_lock(philo->first_fork);
+		thread_status(philo, "take a fork");
+		pthread_mutex_unlock(philo->first_fork);
+		ft_usleep(philo->time_death);
+		return (1);
+	}
+	return (0);
+}
+
 void	*routine(void *arg)
 {
 	t_philo	*philo;
@@ -55,6 +68,8 @@ void	*routine(void *arg)
 		ft_usleep(philo->time_eat / 2);
 	while (1)
 	{
+		if (one_philo(philo))
+			return (NULL);
 		if (lock_forks(philo, philo->first_fork, philo->second_fork))
 			return (NULL);
 		if (ft_eat(philo))

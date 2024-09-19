@@ -6,11 +6,21 @@
 /*   By: hfafouri <hfafouri@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 05:02:33 by hfafouri          #+#    #+#             */
-/*   Updated: 2024/09/18 05:03:00 by hfafouri         ###   ########.fr       */
+/*   Updated: 2024/09/19 06:58:38 by hfafouri         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
+
+int	ft_strlen(char *s)
+{
+	int	i;
+
+	i = 0;
+	while (s[i])
+		i++;
+	return (i);
+}
 
 int	valid_arg1(char **av, int ac)
 {
@@ -21,8 +31,8 @@ int	valid_arg1(char **av, int ac)
 	while (i < ac)
 	{
 		j = 0;
-		if (strlen(av[i]) == 0)
-			return(0);
+		if (ft_strlen(av[i]) == 0)
+			return (0);
 		while (av[i][j])
 		{
 			if (av[i][0] == '+')
