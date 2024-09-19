@@ -3,8 +3,7 @@ CC = cc
 CFLAGS = -fsanitize=thread -g3  -Wall -Wextra -Werror 
 
 
-SOURCE = philosophers.c
-#SOURCE = philosophers1.c
+SOURCE = philosophers.c ft_start.c routine.c supervisor.c utils.c parsing.c
 
 OBJ = $(SOURCE:.c=.o)
 
